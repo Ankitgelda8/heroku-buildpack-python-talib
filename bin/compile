@@ -1,21 +1,29 @@
 #!/usr/bin/env bash
 
-echo "Installing TA-Lib C library..."
+CACHE_DIR=$2
 
-# Step 1: Download and extract TA-Lib source
-wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
-tar -xf ta-lib-0.4.0-src.tar.gz
-cd ta-lib
+source bin/utils
 
-# Step 2: Configure and install TA-Lib
-./configure --prefix=/app/.heroku
-make
-make install
-cd ..
+TALIB=$(/app/.heroku/python/bin/python -c 'import pkgutil; print(1 if pkgutil.find_loader("talib") else 0)')
+if [ "$TALIB" -eq "0" ]; then
+  PYTHON=$(ls /app/.heroku/python/include | grep -m 1 python)
 
-# Step 3: Clean up
-rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
+  puts-step "Installing requirements with pip"
+  /app/.heroku/python/bin/pip install TA-Lib==0.4.24 2>&1 | cleanup | indent
 
-# Step 4: Install Python wrapper
-echo "Installing TA-Lib Python wrapper..."
-CFLAGS="-I/app/.heroku/include" LDFLAGS="-L/app/.heroku/lib" /app/.heroku/python/bin/pip install TA-Lib==0.4.24
+  puts-step "Installing TA-Lib library source code"
+  echo "Download & unpack..." | indent
+  wget -q https://sourceforge.net/projects/ta-lib/files/ta-lib/0.4.0/ta-lib-0.4.0-src.tar.gz/download  > /dev/null 2>&1
+  tar -xf ta-lib-0.4.0-src.tar.gz  && cd ta-lib > /dev/null 2>&1
+  echo "Compile..." | indent
+  ./configure --includedir=/app/.heroku/python/include/${PYTHON} --libdir=/app/.heroku/python/lib --bindir=/app/.heroku/python/bin > /dev/null 2>&1
+  make > /dev/null 2>&1
+  echo "Install..." | indent
+  make install > /dev/null 2>&1
+  echo "TA-Lib library successfully installed" | indent
+
+  /app/.heroku/python/bin/pip install TA-Lib==0.4.24 2>&1 | cleanup | indent
+
+  rm -rf $CACHE_DIR/.heroku/python/
+  cp -R /app/.heroku/python/ $CACHE_DIR/.heroku/
+fi
