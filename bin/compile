@@ -12,7 +12,7 @@ if [ "$TALIB_INSTALLED" -eq "0" ]; then
 
   # Install TA-Lib Python wrapper using pip
   echo "Installing TA-Lib Python wrapper..."
-  /app/.heroku/python/bin/pip install TA-Lib==0.4.0 || {
+  /app/.heroku/python/bin/pip install TA-Lib==0.4.24 || {
     echo "Failed to install TA-Lib Python wrapper via pip"
     exit 1
   }
