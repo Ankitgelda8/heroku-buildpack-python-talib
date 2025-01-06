@@ -1,31 +1,74 @@
 #!/usr/bin/env bash
 
+# Define cache directory and installation paths
 CACHE_DIR=$2
+TALIB_INSTALLED=$(/app/.heroku/python/bin/python -c 'import pkgutil; print(1 if pkgutil.find_loader("talib") else 0)')
 
-source bin/utils
+if [ "$TALIB_INSTALLED" -eq "0" ]; then
+  echo "TA-Lib is not installed. Installing now..."
 
-TALIB=$(/app/.heroku/python/bin/python -c 'import pkgutil; print(1 if pkgutil.find_loader("talib") else 0)')
-if [ "$TALIB" -eq "0" ]; then
-  PYTHON=$(ls /app/.heroku/python/include | grep -m 1 python)
+  # Define Python include path
+  PYTHON_INCLUDE=$(ls /app/.heroku/python/include | grep -m 1 python)
 
-  puts-step "Installing requirements with pip"
-  /app/.heroku/python/bin/pip install TA-Lib==0.4.0 2>&1 | cleanup | indent
+  # Install TA-Lib Python wrapper using pip
+  echo "Installing TA-Lib Python wrapper..."
+  /app/.heroku/python/bin/pip install TA-Lib==0.4.0 || {
+    echo "Failed to install TA-Lib Python wrapper via pip"
+    exit 1
+  }
 
-  puts-step "Installing TA-Lib library source code"
-  echo "Download & unpack..." | indent
-  wget -q http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz  
-  tar -xf ta-lib-0.4.0-src.tar.gz  && cd ta-lib > /dev/null 2>&1
-  echo "Compile..." | indent
-  make > /dev/null 2>&1
-  cd ta-lib
-  ./configure --prefix=/app/.heroku
-  echo "Install..." | indent
- 
-  make install > /dev/null 2>&1
-  echo "TA-Lib library successfully installed" | indent
+  # Download and unpack TA-Lib C library source code
+  echo "Downloading and unpacking TA-Lib C library..."
+  wget -q http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz -O ta-lib-0.4.0-src.tar.gz || {
+    echo "Failed to download TA-Lib source code"
+    exit 1
+  }
+  tar -xf ta-lib-0.4.0-src.tar.gz || {
+    echo "Failed to unpack TA-Lib source code"
+    exit 1
+  }
+  cd ta-lib || {
+    echo "Failed to change directory to TA-Lib source"
+    exit 1
+  }
 
-  /app/.heroku/python/bin/pip install TA-Lib==0.4.0 2>&1 | cleanup | indent
+  # Compile and install TA-Lib C library
+  echo "Compiling TA-Lib C library..."
+  ./configure --prefix=/app/.heroku || {
+    echo "Configuration failed"
+    exit 1
+  }
+  make || {
+    echo "Compilation failed"
+    exit 1
+  }
+  echo "Installing TA-Lib C library..."
+  make install || {
+    echo "Installation failed"
+    exit 1
+  }
 
+  # Cleanup unnecessary files
+  echo "Cleaning up..."
+  cd ..
+  rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
+
+  # Install Python wrapper again to link with compiled C library
+  echo "Re-installing TA-Lib Python wrapper..."
+  /app/.heroku/python/bin/pip install TA-Lib==0.4.0 || {
+    echo "Failed to re-install TA-Lib Python wrapper"
+    exit 1
+  }
+
+  # Cache the Python installation
+  echo "Caching Python installation..."
   rm -rf $CACHE_DIR/.heroku/python/
-  cp -R /app/.heroku/python/ $CACHE_DIR/.heroku/
+  cp -R /app/.heroku/python/ $CACHE_DIR/.heroku/ || {
+    echo "Failed to cache Python installation"
+    exit 1
+  }
+
+  echo "TA-Lib installed successfully!"
+else
+  echo "TA-Lib is already installed. Skipping installation."
 fi
