@@ -1,14 +1,7 @@
 #!/usr/bin/env bash
 
-# Reinstall TA-Lib every time the script runs
-echo "Starting TA-Lib installation..."
-
-# Install TA-Lib Python wrapper using pip
-echo "Installing TA-Lib Python wrapper..."
-/app/.heroku/python/bin/pip install --no-cache-dir TA-Lib==0.4.24 || {
-  echo "Failed to install TA-Lib Python wrapper via pip"
-  exit 1
-}
+# Install TA-Lib C library
+echo "Starting TA-Lib C library installation..."
 
 # Download and unpack TA-Lib C library source code
 echo "Downloading and unpacking TA-Lib C library..."
@@ -46,10 +39,10 @@ echo "Cleaning up..."
 cd ..
 rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
 
-# Reinstall Python wrapper to link with the compiled C library
-echo "Re-installing TA-Lib Python wrapper..."
+# Install TA-Lib Python wrapper
+echo "Installing TA-Lib Python wrapper..."
 /app/.heroku/python/bin/pip install --no-cache-dir TA-Lib==0.4.24 || {
-  echo "Failed to re-install TA-Lib Python wrapper"
+  echo "Failed to install TA-Lib Python wrapper via pip"
   exit 1
 }
 
