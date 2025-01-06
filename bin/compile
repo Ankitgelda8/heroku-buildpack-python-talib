@@ -55,7 +55,7 @@ if [ "$TALIB_INSTALLED" -eq "0" ]; then
 
   # Install Python wrapper again to link with compiled C library
   echo "Re-installing TA-Lib Python wrapper..."
-  /app/.heroku/python/bin/pip install TA-Lib==0.4.0 || {
+  /app/.heroku/python/bin/pip install TA-Lib==0.4.24 || {
     echo "Failed to re-install TA-Lib Python wrapper"
     exit 1
   }
