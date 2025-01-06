@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-# Install TA-Lib C library
 echo "Starting TA-Lib C library installation..."
 
-# Download and unpack TA-Lib C library source code
-echo "Downloading and unpacking TA-Lib C library..."
+# Step 1: Download and unpack the TA-Lib C library source code
+echo "Downloading TA-Lib C library..."
 wget -q http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz -O ta-lib-0.4.0-src.tar.gz || {
   echo "Failed to download TA-Lib source code"
   exit 1
 }
+
+echo "Unpacking TA-Lib C library..."
 tar -xf ta-lib-0.4.0-src.tar.gz || {
   echo "Failed to unpack TA-Lib source code"
   exit 1
@@ -18,7 +19,7 @@ cd ta-lib || {
   exit 1
 }
 
-# Compile and install TA-Lib C library
+# Step 2: Compile and install the TA-Lib C library
 echo "Compiling TA-Lib C library..."
 ./configure --prefix=/app/.heroku || {
   echo "Configuration failed"
@@ -35,14 +36,14 @@ make install || {
 }
 
 # Cleanup unnecessary files
-echo "Cleaning up..."
+echo "Cleaning up TA-Lib C library files..."
 cd ..
 rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
 
-# Install TA-Lib Python wrapper
+# Step 3: Install the Python wrapper for TA-Lib
 echo "Installing TA-Lib Python wrapper..."
 /app/.heroku/python/bin/pip install --no-cache-dir TA-Lib==0.4.24 || {
-  echo "Failed to install TA-Lib Python wrapper via pip"
+  echo "Failed to install TA-Lib Python wrapper"
   exit 1
 }
 
